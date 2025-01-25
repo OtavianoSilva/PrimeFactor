@@ -1,11 +1,12 @@
 import string
+import random
 import math
 from collections import Counter
 
-def generate_prime_map():
+def generate_prime_map(seed):
     """
-    Gera um mapeamento de letras (incluindo acentuadas) e sinais de pontuação para números primos.
-    Também retorna o inverso do mapeamento (de primos para caracteres).
+    Gera um mapeamento de letras (incluindo acentuadas) e sinais de pontuação para números primos
+    com base em uma seed fixa. Também retorna o inverso do mapeamento (de primos para caracteres).
     """
     primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
     punctuation_primes = {
@@ -15,10 +16,7 @@ def generate_prime_map():
         '+': 197, '=': 199, '*': 211, '&': 223, '%': 227, '@': 229, '#': 233, '$': 239
     }
 
-    prime_map = {}
-    reverse_map = {}
-
-    base_letters = string.ascii_lowercase
+    base_letters = list(string.ascii_lowercase)
     accented_letters = {
         'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
         'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
@@ -28,7 +26,15 @@ def generate_prime_map():
         'ç': 'c', 'ñ': 'n'
     }
 
-    # Mapear letras básicas para primos
+    # Fixar a seed para gerar uma configuração consistente
+    random.seed(seed)
+    random.shuffle(base_letters)
+    random.shuffle(primes)
+
+    prime_map = {}
+    reverse_map = {}
+
+    # Mapear letras básicas para primos embaralhados
     for idx, letter in enumerate(base_letters):
         prime_map[letter] = primes[idx]
         prime_map[letter.upper()] = primes[idx]  # Adiciona versão maiúscula
@@ -60,11 +66,12 @@ def factorize_number(number, prime_list):
             break
     return factors
 
-def decrypt_file(input_file, output_file):
+def decrypt_file(input_file, output_file, seed):
     """
-    Lê um arquivo de texto codificado com PrimeFactor e traduz o texto de volta ao formato original.
+    Lê um arquivo de texto codificado com PrimeFactor e traduz o texto de volta ao formato original
+    com base na seed fornecida.
     """
-    prime_map, reverse_map = generate_prime_map()
+    prime_map, reverse_map = generate_prime_map(seed)
     prime_list = sorted(reverse_map.keys())  # Lista de primos em ordem crescente
 
     try:
@@ -101,5 +108,6 @@ def decrypt_file(input_file, output_file):
 # Caminhos dos arquivos
 input_file = 'input_text.txt'
 output_file = 'decrypted_text.txt'
+seed = int(input("Digite a seed para decriptar sua mensagem: "))
 
-decrypt_file(input_file, output_file)
+decrypt_file(input_file, output_file, seed)

@@ -1,10 +1,11 @@
 import string
+import random
 import unicodedata
 
-def generate_prime_map():
+def generate_prime_map(seed):
     """
-    Gera um mapeamento de letras (incluindo acentuadas) e sinais de pontuação para números primos.
-    A -> 2, B -> 3, ..., Z -> 101. Pontuações também são mapeadas.
+    Gera um mapeamento de letras (incluindo acentuadas) e sinais de pontuação para números primos
+    com base em uma seed fixa.
     """
     primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
     punctuation_primes = {
@@ -14,9 +15,7 @@ def generate_prime_map():
         '+': 197, '=': 199, '*': 211, '&': 223, '%': 227, '@': 229, '#': 233, '$': 239
     }
 
-    prime_map = {}
-
-    base_letters = string.ascii_lowercase
+    base_letters = list(string.ascii_lowercase)
     accented_letters = {
         'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
         'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
@@ -26,7 +25,15 @@ def generate_prime_map():
         'ç': 'c', 'ñ': 'n'
     }
 
-    # Mapear letras básicas para primos
+    # Fixar a seed para gerar uma configuração consistente
+    random.seed(seed)
+    random.shuffle(base_letters)
+    random.shuffle(primes)
+
+    # Criar mapeamento
+    prime_map = {}
+
+    # Mapear letras básicas para primos embaralhados
     for idx, letter in enumerate(base_letters):
         prime_map[letter] = primes[idx]
         prime_map[letter.upper()] = primes[idx]  # Adiciona versão maiúscula
@@ -61,12 +68,12 @@ def word_to_prime_product(word, prime_map):
             product *= prime_map[char]
     return product
 
-def encrypt_file(input_file, output_file):
+def encrypt_file(input_file, output_file, seed):
     """
     Lê um arquivo de texto e converte cada palavra para um número baseado em primos,
     mantendo números intactos precedidos por #, e escrevendo os resultados em outro arquivo.
     """
-    prime_map = generate_prime_map()
+    prime_map = generate_prime_map(seed)
 
     try:
         with open(input_file, 'r', encoding='utf-8') as infile:
@@ -96,5 +103,6 @@ def encrypt_file(input_file, output_file):
 # Caminhos dos arquivos
 input_file = 'input_text.txt'
 output_file = 'encrypted_text.txt'
+seed = int(input("Digite a seed para encriptar sua mensagem: "))
 
-encrypt_file(input_file, output_file)
+encrypt_file(input_file, output_file, seed)
