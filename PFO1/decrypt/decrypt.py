@@ -26,7 +26,6 @@ def generate_prime_map(seed):
         'ç': 'c', 'ñ': 'n'
     }
 
-    # Fixar a seed para gerar uma configuração consistente
     random.seed(seed)
     random.shuffle(base_letters)
     random.shuffle(primes)
@@ -34,19 +33,16 @@ def generate_prime_map(seed):
     prime_map = {}
     reverse_map = {}
 
-    # Mapear letras básicas para primos embaralhados
     for idx, letter in enumerate(base_letters):
         prime_map[letter] = primes[idx]
-        prime_map[letter.upper()] = primes[idx]  # Adiciona versão maiúscula
+        prime_map[letter.upper()] = primes[idx]
         reverse_map[primes[idx]] = letter
 
-    # Adicionar letras acentuadas ao mapa
     for accented, base in accented_letters.items():
         prime_map[accented] = prime_map[base]
         prime_map[accented.upper()] = prime_map[base]
         reverse_map[prime_map[base]] = base
 
-    # Adicionar sinais de pontuação ao mapa
     for punct, prime in punctuation_primes.items():
         prime_map[punct] = prime
         reverse_map[prime] = punct
@@ -66,39 +62,54 @@ def factorize_number(number, prime_list):
             break
     return factors
 
-def decrypt_file(input_file, output_file, seed):
+def from_base_n(encoded_str, base):
+    """
+    Converte uma string representando um número em base N para base 10.
+    Suporta letras maiúsculas de A (10) a V (31).
+    """
+    digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    if base > 32 or base < 2:
+        raise ValueError("Base deve estar entre 2 e 32.")
+
+    value = 0
+    for char in encoded_str:
+        if char.upper() not in digits[:base]:
+            raise ValueError(f"Caractere inválido '{char}' para base {base}")
+        value = value * base + digits.index(char.upper())
+    return value
+
+def decrypt_file(input_file, output_file, seed, base):
     """
     Lê um arquivo de texto codificado com PrimeFactor e traduz o texto de volta ao formato original
-    com base na seed fornecida.
+    com base na seed e na base fornecida.
     """
     prime_map, reverse_map = generate_prime_map(seed)
-    prime_list = sorted(reverse_map.keys())  # Lista de primos em ordem crescente
+    prime_list = sorted(reverse_map.keys())
 
     try:
         with open(input_file, 'r', encoding='utf-8') as infile:
             text = infile.read()
 
-        encrypted_words = text.split()  # Divide o texto em palavras ou números codificados
+        encrypted_words = text.split()
         decrypted_words = []
 
         for word in encrypted_words:
             if word.startswith('#') and word[1:].isdigit():
-                # Números, apenas remover o marcador e adicionar ao resultado
                 decrypted_words.append(word[1:])
             else:
-                # Palavra codificada: fatorar e traduzir
                 try:
-                    number = int(word)
+                    number = from_base_n(word, base)
                     factors = factorize_number(number, prime_list)
                     letters = [reverse_map[factor] for factor in factors]
                     decrypted_words.append(''.join(letters))
-                except ValueError:
-                    decrypted_words.append("[ERRO]")  # Marca caso ocorra um erro inesperado
+                except Exception as e:
+                    decrypted_words.append("[ERRO]")
 
         with open(output_file, 'w', encoding='utf-8') as outfile:
             outfile.write(' '.join(decrypted_words))
 
         print(f"Arquivo decriptado com sucesso! Saída escrita em '{output_file}'.")
+        print(f"Seed utilizada: {seed} | Base utilizada: {base}")
 
     except FileNotFoundError:
         print(f"Erro: O arquivo '{input_file}' não foi encontrado.")
@@ -108,6 +119,14 @@ def decrypt_file(input_file, output_file, seed):
 # Caminhos dos arquivos
 input_file = 'input_text.txt'
 output_file = 'decrypted_text.txt'
-seed = int(input("Digite a seed para decriptar sua mensagem: "))
 
-decrypt_file(input_file, output_file, seed)
+seed = int(input("Digite a seed para decriptar sua mensagem: "))
+try:
+    base = int(input("Digite a base de numeração usada na encriptação (2 a 32): ") or 10)
+    if not (2 <= base <= 32):
+        raise ValueError
+except ValueError:
+    print("Base inválida. Usando base 10 por padrão.")
+    base = 10
+
+decrypt_file(input_file, output_file, seed, base)

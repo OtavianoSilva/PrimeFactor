@@ -68,10 +68,28 @@ def word_to_prime_product(word, prime_map):
             product *= prime_map[char]
     return product
 
-def encrypt_file(input_file, output_file, seed):
+def to_base_n(number, base):
+    """
+    Converte um número inteiro para uma string em base N (até base 32).
+    Usa dígitos 0-9 e letras A-V.
+    """
+    if number == 0:
+        return "0"
+
+    digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    if base > 32 or base < 2:
+        raise ValueError("Base deve estar entre 2 e 32.")
+
+    result = ''
+    while number > 0:
+        result = digits[number % base] + result
+        number //= base
+    return result
+
+def encrypt_file(input_file, output_file, seed, base):
     """
     Lê um arquivo de texto e converte cada palavra para um número baseado em primos,
-    mantendo números intactos precedidos por #, e escrevendo os resultados em outro arquivo.
+    convertendo esse número para a base escolhida, mantendo números intactos precedidos por #.
     """
     prime_map = generate_prime_map(seed)
 
@@ -79,21 +97,23 @@ def encrypt_file(input_file, output_file, seed):
         with open(input_file, 'r', encoding='utf-8') as infile:
             text = infile.read()
 
-        words = text.split()  # Divide o texto em palavras
+        words = text.split()
         encrypted_words = []
 
         for word in words:
-            if word.isdigit():  # Se a palavra for um número, mantém com #
+            if word.isdigit():
                 encrypted_words.append(f"#{word}")
             else:
                 normalized_word = normalize_word(word)
                 encrypted_number = word_to_prime_product(normalized_word, prime_map)
-                encrypted_words.append(str(encrypted_number))
+                encrypted_base_n = to_base_n(encrypted_number, base)
+                encrypted_words.append(encrypted_base_n)
 
         with open(output_file, 'w', encoding='utf-8') as outfile:
             outfile.write(' '.join(encrypted_words))
 
         print(f"Arquivo encriptado com sucesso! Saída escrita em '{output_file}'.")
+        print(f"Seed utilizada: {seed} | Base utilizada: {base}")
 
     except FileNotFoundError:
         print(f"Erro: O arquivo '{input_file}' não foi encontrado.")
@@ -103,6 +123,14 @@ def encrypt_file(input_file, output_file, seed):
 # Caminhos dos arquivos
 input_file = 'input_text.txt'
 output_file = 'encrypted_text.txt'
-seed = int(input("Digite a seed para encriptar sua mensagem: "))
+seed = int(input("Digite a seed para encriptar sua mensagem: ") or 410)
 
-encrypt_file(input_file, output_file, seed)
+try:
+    base = int(input("Digite a base de numeração (2 a 32): ") or 10)
+    if not (2 <= base <= 32):
+        raise ValueError
+except ValueError:
+    print("Base inválida. Usando base 10 por padrão.")
+    base = 10
+
+encrypt_file(input_file, output_file, seed, base)
