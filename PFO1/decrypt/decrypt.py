@@ -66,17 +66,20 @@ def factorize_number(number, prime_list):
 def from_base_n(encoded_str, base):
     """
     Converts a string representing a number in base N to base 10.
-    Supports letters stored from A (10) to V (31).
+    Supports up to base 62.
     """
-    digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    if base > 32 or base < 2:
-        raise ValueError("Base must be between 2 and 32.")
+    # Mesma sequência usada na criptografia
+    digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    
+    if base > 62 or base < 2:
+        raise ValueError("Base must be between 2 and 62.")
 
     value = 0
     for char in encoded_str:
-        if char.upper() not in digits[:base]:
+        # Removido o .upper() para manter a sensibilidade entre maiúsculas e minúsculas
+        if char not in digits[:base]:
             raise ValueError(f"Invalid character '{char}' for base {base}")
-        value = value * base + digits.index(char.upper())
+        value = value * base + digits.index(char)
     return value
 
 def decrypt_file(input_file, output_file, seed, base):
@@ -122,12 +125,17 @@ input_file = 'input_text.txt'
 output_file = 'decrypted_text.txt'
 
 try:
-    seed = int(input("Enter the seed to decrypt your message: "))
-    base = int(input("Enter the base used for encryption (2 to 32) [Default 10]: ") or 10)
-    if not (2 <= base <= 32):
+    seed_input = input("Enter the seed to decrypt your message (default 410): ")
+    seed = int(seed_input) if seed_input else 410
+    
+    base_input = input("Enter the base used for encryption (2 to 62) [Default 10]: ")
+    base = int(base_input) if base_input else 10
+    
+    if not (2 <= base <= 62):
         raise ValueError
 except ValueError:
-    print("Invalid base or seed. Using base 10 by default.")
+    print("Invalid base or seed. Using default values (Seed: 410, Base: 10).")
+    seed = 410
     base = 10
 
 decrypt_file(input_file, output_file, seed, base)

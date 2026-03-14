@@ -71,15 +71,17 @@ def word_to_prime_product(word, prime_map):
 
 def to_base_n(number, base):
     """
-    Converts an integer to a string in base N (up to base 32).
-    Uses digits 0-9 and letters A-V.
+    Converts an integer to a string in base N (up to base 62).
+    Uses digits 0-9, A-Z, and a-z following ASCII order.
     """
     if number == 0:
         return "0"
 
-    digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    if base > 32 or base < 2:
-        raise ValueError("Base must be between 2 and 32.")
+    # Sequência seguindo a ordem da tabela ASCII: 0-9, A-Z, a-z
+    digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    
+    if base > 62 or base < 2:
+        raise ValueError("Base must be between 2 and 62.")
 
     result = ''
     while number > 0:
@@ -106,6 +108,8 @@ def encrypt_file(input_file, output_file, seed, base):
                 encrypted_words.append(f"#{word}")
             else:
                 normalized_word = normalize_word(word)
+                if not normalized_word:  # Evita erro de palavra vazia
+                    continue
                 encrypted_number = word_to_prime_product(normalized_word, prime_map)
                 encrypted_base_n = to_base_n(encrypted_number, base)
                 encrypted_words.append(encrypted_base_n)
@@ -129,10 +133,11 @@ try:
     seed_input = input("Enter the seed to encrypt your message (default 410): ")
     seed = int(seed_input) if seed_input else 410
     
-    base_input = input("Enter the numbering base (2 to 32) [default 10]: ")
+    # Atualizado para pedir até a base 62
+    base_input = input("Enter the numbering base (2 to 62) [default 10]: ")
     base = int(base_input) if base_input else 10
     
-    if not (2 <= base <= 32):
+    if not (2 <= base <= 62):
         raise ValueError
 except ValueError:
     print("Invalid input. Using default values (Seed: 410, Base: 10).")
