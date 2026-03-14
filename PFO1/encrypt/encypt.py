@@ -7,15 +7,18 @@ def generate_prime_map(seed):
     Generates a mapping of letters (including accented) and punctuation marks to prime
     numbers based on a fixed seed.
     """
-    primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
-    punctuation_primes = {
-        '.': 103, ',': 107, '!': 109, '?': 113, ':': 127, ';': 131,
-        '(': 137, ')': 139, '[': 149, ']': 151, '{': 157, '}': 163,
-        '"': 167, "'": 173, '-': 179, '_': 181, '/': 191, '\\': 193,
-        '+': 197, '=': 199, '*': 211, '&': 223, '%': 227, '@': 229, '#': 233, '$': 239
-    }
+    primes = [
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 
+        73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 
+        157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 
+        239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 
+        331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409
+    ]
 
-    base_letters = list(string.ascii_lowercase)
+    letters = list(string.ascii_lowercase)
+    digits = list(string.digits)
+    symbols = list(".,!? :;()[]{}\"'-_\\/+*&%@#$^")
+
     accented_letters = {
         'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
         'é': 'e', 'è': 'e', 'ê': 'e', 'ë': 'e',
@@ -25,26 +28,30 @@ def generate_prime_map(seed):
         'ç': 'c', 'ñ': 'n'
     }
 
+    all_chars = letters + digits + symbols
+
     # Fix the seed to generate a consistent configuration
     random.seed(seed)
-    random.shuffle(base_letters)
+    random.shuffle(all_chars)
     random.shuffle(primes)
 
     # Create mapping
     prime_map = {}
 
     # Map base letters to shuffled primes
-    for idx, letter in enumerate(base_letters):
-        prime_map[letter] = primes[idx]
-        prime_map[letter.upper()] = primes[idx]  # Add uppercase version
+    for idx, char in enumerate(all_chars):
+        p = primes[idx]
+        prime_map[char] = p
+
+        if char.isalpha():
+            prime_map[char.upper()] = p
 
     # Add accented letters to the map
     for accented, base in accented_letters.items():
-        prime_map[accented] = prime_map[base]
-        prime_map[accented.upper()] = prime_map[base]
-
-    # Add punctuation marks to the map
-    prime_map.update(punctuation_primes)
+        if base in prime_map:
+            p = prime_map[base]
+            prime_map[accented] = p
+            prime_map[accented.upper()] = p
 
     return prime_map
 
@@ -65,7 +72,7 @@ def word_to_prime_product(word, prime_map):
     their relative position
     """
     total_value = 0
-    multiplier = 241 # Needs to be a prime out of prime_map
+    multiplier = 419 # Needs to be a prime out of prime_map and greater than all of them
     for i, char in enumerate(word):
         if char in prime_map:  # Ignore characters not in the map
             # It creates the relationship between numbers and their relative position
