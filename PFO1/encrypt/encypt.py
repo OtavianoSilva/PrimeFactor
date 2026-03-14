@@ -61,13 +61,16 @@ def normalize_word(word):
 
 def word_to_prime_product(word, prime_map):
     """
-    Converts a word into a number by multiplying the primes of each character.
+    Converts a word into a number by multiplying the primes of each character and
+    their relative position
     """
-    product = 1
-    for char in word:
+    total_value = 0
+    multiplier = 241 # Needs to be a prime out of prime_map
+    for i, char in enumerate(word):
         if char in prime_map:  # Ignore characters not in the map
-            product *= prime_map[char]
-    return product
+            # It creates the relationship between numbers and their relative position
+            total_value += prime_map[char] * (multiplier ** i)
+    return total_value
 
 def to_base_n(number, base):
     """

@@ -4,11 +4,6 @@ import math
 from collections import Counter
 
 def generate_prime_map(seed):
-    """
-    Generates a mapping of letters (including accented) and punctuation marks to prime
-    numbers based on a fixed seed. It also returns the inverse of the mapping (from
-    primes to characters)
-    """
     primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
     punctuation_primes = {
         '.': 103, ',': 107, '!': 109, '?': 113, ':': 127, ';': 131,
@@ -50,45 +45,29 @@ def generate_prime_map(seed):
 
     return prime_map, reverse_map
 
-def factorize_number(number, prime_list):
-    """
-    Factors a number from a list of prime numbers
-    """
-    factors = []
-    for prime in prime_list:
-        while number % prime == 0:
-            factors.append(prime)
-            number //= prime
-        if number == 1:
-            break
-    return factors
+def factorize_number(number, reverse_map):
+    letters = []
+    multiplier = 241
+    while number > 0:
+        char_prime = number % multiplier
+        if char_prime in reverse_map:
+            letters.append(reverse_map[char_prime])
+        number //= multiplier
+    return letters
 
 def from_base_n(encoded_str, base):
-    """
-    Converts a string representing a number in base N to base 10.
-    Supports up to base 62.
-    """
-    # Mesma sequência usada na criptografia
     digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-    
     if base > 62 or base < 2:
         raise ValueError("Base must be between 2 and 62.")
-
     value = 0
     for char in encoded_str:
-        # Removido o .upper() para manter a sensibilidade entre maiúsculas e minúsculas
         if char not in digits[:base]:
             raise ValueError(f"Invalid character '{char}' for base {base}")
         value = value * base + digits.index(char)
     return value
 
 def decrypt_file(input_file, output_file, seed, base):
-    """
-    Reads a text file encoded with PrimeFactor and translates the text back to the
-    original format based on the seed and base provided.
-    """
     prime_map, reverse_map = generate_prime_map(seed)
-    prime_list = sorted(reverse_map.keys())
 
     try:
         with open(input_file, 'r', encoding='utf-8') as infile:
@@ -103,8 +82,7 @@ def decrypt_file(input_file, output_file, seed, base):
             else:
                 try:
                     number = from_base_n(word, base)
-                    factors = factorize_number(number, prime_list)
-                    letters = [reverse_map[factor] for factor in factors]
+                    letters = factorize_number(number, reverse_map)
                     decrypted_words.append(''.join(letters))
                 except Exception as e:
                     decrypted_words.append("[ERROR]")
@@ -120,17 +98,14 @@ def decrypt_file(input_file, output_file, seed, base):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-# File paths
 input_file = 'input_text.txt'
 output_file = 'decrypted_text.txt'
 
 try:
     seed_input = input("Enter the seed to decrypt your message (default 410): ")
     seed = int(seed_input) if seed_input else 410
-    
     base_input = input("Enter the base used for encryption (2 to 62) [Default 10]: ")
     base = int(base_input) if base_input else 10
-    
     if not (2 <= base <= 62):
         raise ValueError
 except ValueError:
