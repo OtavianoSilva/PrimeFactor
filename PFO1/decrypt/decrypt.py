@@ -5,8 +5,9 @@ from collections import Counter
 
 def generate_prime_map(seed):
     """
-    Gera um mapeamento de letras (incluindo acentuadas) e sinais de pontuação para números primos
-    com base em uma seed fixa. Também retorna o inverso do mapeamento (de primos para caracteres).
+    Generates a mapping of letters (including accented) and punctuation marks to prime
+    numbers based on a fixed seed. It also returns the inverse of the mapping (from
+    primes to characters)
     """
     primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
     punctuation_primes = {
@@ -51,7 +52,7 @@ def generate_prime_map(seed):
 
 def factorize_number(number, prime_list):
     """
-    Faz a fatoração de um número em uma lista de números primos.
+    Factors a number from a list of prime numbers
     """
     factors = []
     for prime in prime_list:
@@ -64,24 +65,24 @@ def factorize_number(number, prime_list):
 
 def from_base_n(encoded_str, base):
     """
-    Converte uma string representando um número em base N para base 10.
-    Suporta letras maiúsculas de A (10) a V (31).
+    Converts a string representing a number in base N to base 10.
+    Supports letters stored from A (10) to V (31).
     """
     digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     if base > 32 or base < 2:
-        raise ValueError("Base deve estar entre 2 e 32.")
+        raise ValueError("Base must be between 2 and 32.")
 
     value = 0
     for char in encoded_str:
         if char.upper() not in digits[:base]:
-            raise ValueError(f"Caractere inválido '{char}' para base {base}")
+            raise ValueError(f"Invalid character '{char}' for base {base}")
         value = value * base + digits.index(char.upper())
     return value
 
 def decrypt_file(input_file, output_file, seed, base):
     """
-    Lê um arquivo de texto codificado com PrimeFactor e traduz o texto de volta ao formato original
-    com base na seed e na base fornecida.
+    Reads a text file encoded with PrimeFactor and translates the text back to the
+    original format based on the seed and base provided.
     """
     prime_map, reverse_map = generate_prime_map(seed)
     prime_list = sorted(reverse_map.keys())
@@ -103,30 +104,30 @@ def decrypt_file(input_file, output_file, seed, base):
                     letters = [reverse_map[factor] for factor in factors]
                     decrypted_words.append(''.join(letters))
                 except Exception as e:
-                    decrypted_words.append("[ERRO]")
+                    decrypted_words.append("[ERROR]")
 
         with open(output_file, 'w', encoding='utf-8') as outfile:
             outfile.write(' '.join(decrypted_words))
 
-        print(f"Arquivo decriptado com sucesso! Saída escrita em '{output_file}'.")
-        print(f"Seed utilizada: {seed} | Base utilizada: {base}")
+        print(f"File decrypted successfully! Output written to '{output_file}'.")
+        print(f"Seed used: {seed} | Base Used: {base}")
 
     except FileNotFoundError:
-        print(f"Erro: O arquivo '{input_file}' não foi encontrado.")
+        print(f"Error: The file '{input_file}' was not found.")
     except Exception as e:
-        print(f"Ocorreu um erro: {e}")
+        print(f"An error occurred: {e}")
 
-# Caminhos dos arquivos
+# File paths
 input_file = 'input_text.txt'
 output_file = 'decrypted_text.txt'
 
-seed = int(input("Digite a seed para decriptar sua mensagem: "))
 try:
-    base = int(input("Digite a base de numeração usada na encriptação (2 a 32): ") or 10)
+    seed = int(input("Enter the seed to decrypt your message: "))
+    base = int(input("Enter the base used for encryption (2 to 32) [Default 10]: ") or 10)
     if not (2 <= base <= 32):
         raise ValueError
 except ValueError:
-    print("Base inválida. Usando base 10 por padrão.")
+    print("Invalid base or seed. Using base 10 by default.")
     base = 10
 
 decrypt_file(input_file, output_file, seed, base)

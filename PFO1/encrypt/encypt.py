@@ -4,8 +4,8 @@ import unicodedata
 
 def generate_prime_map(seed):
     """
-    Gera um mapeamento de letras (incluindo acentuadas) e sinais de pontuação para números primos
-    com base em uma seed fixa.
+    Generates a mapping of letters (including accented) and punctuation marks to prime
+    numbers based on a fixed seed.
     """
     primes = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101]
     punctuation_primes = {
@@ -25,60 +25,61 @@ def generate_prime_map(seed):
         'ç': 'c', 'ñ': 'n'
     }
 
-    # Fixar a seed para gerar uma configuração consistente
+    # Fix the seed to generate a consistent configuration
     random.seed(seed)
     random.shuffle(base_letters)
     random.shuffle(primes)
 
-    # Criar mapeamento
+    # Create mapping
     prime_map = {}
 
-    # Mapear letras básicas para primos embaralhados
+    # Map base letters to shuffled primes
     for idx, letter in enumerate(base_letters):
         prime_map[letter] = primes[idx]
-        prime_map[letter.upper()] = primes[idx]  # Adiciona versão maiúscula
+        prime_map[letter.upper()] = primes[idx]  # Add uppercase version
 
-    # Adicionar letras acentuadas ao mapa
+    # Add accented letters to the map
     for accented, base in accented_letters.items():
         prime_map[accented] = prime_map[base]
         prime_map[accented.upper()] = prime_map[base]
 
-    # Adicionar sinais de pontuação ao mapa
+    # Add punctuation marks to the map
     prime_map.update(punctuation_primes)
 
     return prime_map
 
 def normalize_word(word):
     """
-    Remove caracteres não suportados e mantém pontuação e letras.
+    Removes unsupported characters and keeps punctuation and letters.
     """
+    allowed_chars = "áàâãäéèêëíìîïóòôõöúùûüçñÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ.!,?:;()[]{}\"'-_/*+&%@#$"
     word = ''.join(
         char for char in word
-        if char.isalnum() or char in "áàâãäéèêëíìîïóòôõöúùûüçñÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ.!,?:;()[]{}\"'-_/*+&%@#$"
+        if char.isalnum() or char in allowed_chars
     )
     return word
 
 def word_to_prime_product(word, prime_map):
     """
-    Converte uma palavra em um número pela multiplicação dos primos de cada caractere.
+    Converts a word into a number by multiplying the primes of each character.
     """
     product = 1
     for char in word:
-        if char in prime_map:  # Ignorar caracteres que não estejam no mapa
+        if char in prime_map:  # Ignore characters not in the map
             product *= prime_map[char]
     return product
 
 def to_base_n(number, base):
     """
-    Converte um número inteiro para uma string em base N (até base 32).
-    Usa dígitos 0-9 e letras A-V.
+    Converts an integer to a string in base N (up to base 32).
+    Uses digits 0-9 and letters A-V.
     """
     if number == 0:
         return "0"
 
     digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     if base > 32 or base < 2:
-        raise ValueError("Base deve estar entre 2 e 32.")
+        raise ValueError("Base must be between 2 and 32.")
 
     result = ''
     while number > 0:
@@ -88,8 +89,8 @@ def to_base_n(number, base):
 
 def encrypt_file(input_file, output_file, seed, base):
     """
-    Lê um arquivo de texto e converte cada palavra para um número baseado em primos,
-    convertendo esse número para a base escolhida, mantendo números intactos precedidos por #.
+    Reads a text file and converts each word to a prime-based number,
+    converting that number to the chosen base, keeping numbers intact preceded by #.
     """
     prime_map = generate_prime_map(seed)
 
@@ -112,25 +113,30 @@ def encrypt_file(input_file, output_file, seed, base):
         with open(output_file, 'w', encoding='utf-8') as outfile:
             outfile.write(' '.join(encrypted_words))
 
-        print(f"Arquivo encriptado com sucesso! Saída escrita em '{output_file}'.")
-        print(f"Seed utilizada: {seed} | Base utilizada: {base}")
+        print(f"File encrypted successfully! Output written to '{output_file}'.")
+        print(f"Seed used: {seed} | Base used: {base}")
 
     except FileNotFoundError:
-        print(f"Erro: O arquivo '{input_file}' não foi encontrado.")
+        print(f"Error: The file '{input_file}' was not found.")
     except Exception as e:
-        print(f"Ocorreu um erro: {e}")
+        print(f"An error occurred: {e}")
 
-# Caminhos dos arquivos
+# File paths
 input_file = 'input_text.txt'
 output_file = 'encrypted_text.txt'
-seed = int(input("Digite a seed para encriptar sua mensagem: ") or 410)
 
 try:
-    base = int(input("Digite a base de numeração (2 a 32): ") or 10)
+    seed_input = input("Enter the seed to encrypt your message (default 410): ")
+    seed = int(seed_input) if seed_input else 410
+    
+    base_input = input("Enter the numbering base (2 to 32) [default 10]: ")
+    base = int(base_input) if base_input else 10
+    
     if not (2 <= base <= 32):
         raise ValueError
 except ValueError:
-    print("Base inválida. Usando base 10 por padrão.")
+    print("Invalid input. Using default values (Seed: 410, Base: 10).")
+    seed = 410
     base = 10
 
 encrypt_file(input_file, output_file, seed, base)
