@@ -1,20 +1,12 @@
 import string
 import random
-import unicodedata
+import sympy
 
 def generate_prime_map(seed):
     """
     Generates a mapping of letters (including accented) and punctuation marks to prime
     numbers based on a fixed seed.
     """
-    primes = [
-        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 
-        73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 
-        157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 
-        239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 
-        331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409
-    ]
-
     letters = list(string.ascii_lowercase)
     digits = list(string.digits)
     symbols = list(".,!? :;()[]{}\"'-_\\/+*&%@#$^")
@@ -29,6 +21,8 @@ def generate_prime_map(seed):
     }
 
     all_chars = letters + digits + symbols
+
+    primes = [sympy.prime(i) for i in range(1, len(all_chars) + 1)]
 
     # Fix the seed to generate a consistent configuration
     random.seed(seed)
@@ -55,16 +49,8 @@ def generate_prime_map(seed):
 
     return prime_map
 
-def normalize_word(word):
-    """
-    Removes unsupported characters and keeps punctuation and letters.
-    """
-    allowed_chars = "áàâãäéèêëíìîïóòôõöúùûüçñÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ.!,?:;()[]{}\"'-_/*+&%@#$"
-    word = ''.join(
-        char for char in word
-        if char.isalnum() or char in allowed_chars
-    )
-    return word
+def normalize_word(word, prime_map):
+    return ''.join(char for char in word if char in prime_map)
 
 def word_to_prime_product(word, prime_map):
     """
@@ -72,7 +58,7 @@ def word_to_prime_product(word, prime_map):
     their relative position
     """
     total_value = 0
-    multiplier = 419 # Needs to be a prime out of prime_map and greater than all of them
+    multiplier = sympy.nextprime(max(prime_map.values()))
     for i, char in enumerate(word):
         if char in prime_map:  # Ignore characters not in the map
             # It creates the relationship between numbers and their relative position
@@ -107,22 +93,19 @@ def encrypt_file(input_file, output_file, seed, base):
     prime_map = generate_prime_map(seed)
 
     try:
-        with open(input_file, 'r', encoding='utf-8') as infile:
-            text = infile.read()
+        with open(input_file, 'r', encoding='utf-8') as in_file:
+            text = in_file.read()
 
         words = text.split()
         encrypted_words = []
 
         for word in words:
-            if word.isdigit():
-                encrypted_words.append(f"#{word}")
-            else:
-                normalized_word = normalize_word(word)
-                if not normalized_word:  # Evita erro de palavra vazia
-                    continue
-                encrypted_number = word_to_prime_product(normalized_word, prime_map)
-                encrypted_base_n = to_base_n(encrypted_number, base)
-                encrypted_words.append(encrypted_base_n)
+            normalized_word = normalize_word(word, prime_map)
+            if not normalized_word:
+                continue
+            encrypted_number = word_to_prime_product(normalized_word, prime_map)
+            encrypted_base_n = to_base_n(encrypted_number, base)
+            encrypted_words.append(encrypted_base_n)
 
         with open(output_file, 'w', encoding='utf-8') as outfile:
             outfile.write(' '.join(encrypted_words))

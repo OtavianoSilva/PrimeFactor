@@ -1,6 +1,6 @@
 import string
 import random
-import math
+import sympy
 from collections import Counter
 
 def generate_prime_map(seed):
@@ -8,13 +8,6 @@ def generate_prime_map(seed):
     Generates a mapping of letters (including accented) and punctuation marks to prime
     numbers based on a fixed seed.
     """
-    primes = [
-        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 
-        73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 
-        157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233, 
-        239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307, 311, 313, 317, 
-        331, 337, 347, 349, 353, 359, 367, 373, 379, 383, 389, 397, 401, 409
-    ]
 
     letters = list(string.ascii_lowercase)
     digits = list(string.digits)
@@ -30,6 +23,9 @@ def generate_prime_map(seed):
     }
 
     all_chars = letters + digits + symbols
+
+    primes = [sympy.prime(i) for i in range(1, len(all_chars) + 1)]
+
 
     # Fix the seed to generate a consistent configuration
     random.seed(seed)
@@ -60,7 +56,7 @@ def generate_prime_map(seed):
 
 def factorize_number(number, reverse_map):
     letters = []
-    multiplier = 419
+    multiplier = sympy.nextprime(max(reverse_map))
     while number > 0:
         char_prime = number % multiplier
         if char_prime in reverse_map:
@@ -90,15 +86,12 @@ def decrypt_file(input_file, output_file, seed, base):
         decrypted_words = []
 
         for word in encrypted_words:
-            if word.startswith('#') and word[1:].isdigit():
-                decrypted_words.append(word[1:])
-            else:
-                try:
-                    number = from_base_n(word, base)
-                    letters = factorize_number(number, reverse_map)
-                    decrypted_words.append(''.join(letters))
-                except Exception as e:
-                    decrypted_words.append("[ERROR]")
+            try:
+                number = from_base_n(word, base)
+                letters = factorize_number(number, reverse_map)
+                decrypted_words.append(''.join(letters))
+            except Exception as e:
+                decrypted_words.append("[ERROR]")
 
         with open(output_file, 'w', encoding='utf-8') as outfile:
             outfile.write(' '.join(decrypted_words))
