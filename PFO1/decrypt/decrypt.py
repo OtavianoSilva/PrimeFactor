@@ -3,6 +3,18 @@ import random
 import sympy
 from collections import Counter
 
+def load_special_symbols(file_name='special_characters.txt'):
+    """
+    Reads symbols from a file and returns a unique list of characters.
+    """
+    try:
+        with open(f'PFO1/{file_name}.txt', 'r', encoding='utf-8') as f:
+            symbols = list(f.read().replace('\n', ''))
+            return list(set(symbols))
+    except FileNotFoundError:
+        # Fallback if file is missing
+        return list(".,!? :;()[]{}\"'-_\\/+*&%@#$^")
+
 def generate_prime_map(seed):
     """
     Generates a mapping of letters (including accented) and punctuation marks to prime
@@ -11,7 +23,7 @@ def generate_prime_map(seed):
 
     letters = list(string.ascii_lowercase)
     digits = list(string.digits)
-    symbols = list(".,!? :;()[]{}\"'-_\\/+*&%@#$^")
+    symbols = load_special_symbols()
 
     accented_letters = {
         'á': 'a', 'à': 'a', 'â': 'a', 'ã': 'a', 'ä': 'a',
@@ -104,8 +116,8 @@ def decrypt_file(input_file, output_file, seed, base):
     except Exception as e:
         print(f"An error occurred: {e}")
 
-input_file = 'input_text.txt'
-output_file = 'decrypted_text.txt'
+input_file = 'PFO1/decrypt/input_text.txt'
+output_file = 'PFO1/decrypt/decrypted_text.txt'
 
 try:
     seed_input = input("Enter the seed to decrypt your message (default 410): ")
